@@ -9,7 +9,6 @@ import time
 running = True  # Flag for the scheduler thread
 TIMEZONE = pytz.timezone('Europe/Kiev')  # Set your timezone here
 
-
 def save_reminder():
     reminder_date = date_entry.get().strip()
     reminder_time = time_entry.get().strip()
@@ -29,12 +28,14 @@ def save_reminder():
 
     messagebox.showinfo("Reminder", "Reminder saved successfully!")
 
-
 def clear_fields():
+    # Reset fields to current date and time
+    now = datetime.now(TIMEZONE)
     date_entry.delete(0, "end")
+    date_entry.insert(0, now.strftime("%Y-%m-%d"))
     time_entry.delete(0, "end")
+    time_entry.insert(0, now.strftime("%H:%M"))
     text_entry.delete("1.0", "end")
-
 
 def check_reminders():
     now = datetime.now(TIMEZONE)
@@ -79,24 +80,23 @@ def check_reminders():
     with open("reminders.txt", "w", encoding="utf-8") as file:
         file.writelines(new_reminders)
 
-
 def start_scheduler():
     schedule.every().minute.do(check_reminders)
     while running:
         schedule.run_pending()
         time.sleep(1)
 
-
 def on_close():
     global running
     running = False
     root.destroy()
 
-
 # Create main window
 root = tk.Tk()
 root.title("Daily Reminder")
-root.resizable(False, False) 
+root.resizable(False, False)
+icon = tk.PhotoImage(file="icon.png")
+root.iconphoto(True, icon)
 
 # Handle window close
 root.protocol("WM_DELETE_WINDOW", on_close)
@@ -126,6 +126,9 @@ save_button.grid(row=3, column=0, columnspan=2, padx=10, pady=5, sticky="WE")
 # Clear Button
 clear_button = tk.Button(root, text="Clear Fields", command=clear_fields)
 clear_button.grid(row=4, column=0, columnspan=2, padx=10, pady=5, sticky="WE")
+
+# Fill date and time fields with current values on startup
+clear_fields()
 
 # Start Scheduler
 scheduler_thread = threading.Thread(target=start_scheduler, daemon=True)
